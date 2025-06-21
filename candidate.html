@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FairVote Candidates</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: "Inter", sans-serif; }
+    .candidate-card {
+      transition: all 0.3s ease;
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    }
+    .candidate-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);
+    }
+    .vote-bar {
+      background: linear-gradient(90deg, #7c3aed 0%, #a855f7 100%);
+      border-radius: 8px;
+      height: 8px;
+      transition: all 0.5s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .vote-bar::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+      animation: shimmer 2s infinite;
+    }
+    @keyframes shimmer {
+      0% { left: -100%; }
+      100% { left: 100%; }
+    }
+    .search-input:focus {
+      box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
+      transform: scale(1.02);
+    }
+    .glassmorphism {
+      background: rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+    .floating-header {
+      animation: float 6s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+    .stat-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      transition: all 0.3s ease;
+    }
+    .stat-card:hover {
+      transform: translateY(-5px) scale(1.02);
+      box-shadow: 0 25px 50px -5px rgba(102, 126, 234, 0.3);
+    }
+    .pulse-dot {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: .5; }
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-purple-50 via-white to-indigo-50 min-h-screen">
+  <header class="glassmorphism sticky top-0 z-50">
+    <nav class="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
+      <div class="flex items-center space-x-3 floating-header">
+        <div class="w-10 h-10 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
+          <i class="fas fa-vote-yea text-white text-lg"></i>
+        </div>
+        <span class="font-bold text-xl text-gray-800">FairVote</span>
+      </div>
+      
+      <ul class="hidden md:flex space-x-8 text-sm font-medium">
+        <li><a href="./index.html" class="text-gray-600 hover:text-purple-600 transition duration-300">Home</a></li>
+        <li><a href="./dashboard.html" class="text-gray-600 hover:text-purple-600 transition duration-300">Dashboard</a></li>
+        <li><a href="./candidate.html" class="text-purple-600 font-semibold relative">
+          Candidates
+          <span class="absolute -bottom-1 left-0 w-full h-0.5 bg-purple-600 rounded-full"></span>
+        </a></li>
+        <li><a href="./vote.html" class="text-gray-600 hover:text-purple-600 transition duration-300">Vote</a></li>
+      </ul>
+      
+      <div class="flex items-center space-x-4">
+        <div class="flex items-center space-x-2 text-sm text-gray-600">
+          <div class="w-8 h-8 bg-gradient-to-r from-purple-400 to-indigo-400 rounded-full flex items-center justify-center relative">
+            <i class="fas fa-user text-white text-xs"></i>
+            <span class="pulse-dot absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></span>
+          </div>
+          <span id="currentUser" class="font-semibold">Loading...</span>
+        </div>
+        <button onclick="handleLogout()" class="flex items-center space-x-2 px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-white hover:shadow-md transition duration-300">
+          <i class="fas fa-sign-out-alt"></i>
+          <a href="./index.html">Log Out</a>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-6 py-8">
+    <div class="text-center mb-12">
+      <h1 id="pageTitle" class="text-5xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-4">
+        Meet the Candidates
+      </h1>
+      <p class="text-lg text-gray-600 max-w-2xl mx-auto">Get to know the candidates running for mayor and make an informed decision</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div class="stat-card rounded-2xl p-6 text-white text-center">
+        <div class="text-3xl font-bold" id="totalCandidates">4</div>
+        <div class="text-sm opacity-90">Total Candidates</div>
+      </div>
+      <div class="stat-card rounded-2xl p-6 text-white text-center">
+        <div class="text-3xl font-bold" id="totalVotes">1,010</div>
+        <div class="text-sm opacity-90">Total Votes Cast</div>
+      </div>
+      <div class="stat-card rounded-2xl p-6 text-white text-center">
+        <div class="text-3xl font-bold" id="leadingCandidate">Elena Rodriguez</div>
+        <div class="text-sm opacity-90">Leading Candidate</div>
+      </div>
+      <div class="stat-card rounded-2xl p-6 text-white text-center">
+        <div class="text-3xl font-bold">42%</div>
+        <div class="text-sm opacity-90">Voter Turnout</div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8">
+      <div class="flex flex-col sm:flex-row gap-4 items-center justify-between">
+        <div class="relative flex-1 max-w-md">
+          <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+          <input 
+            type="text" 
+            id="searchInput"
+            placeholder="Search candidates..."
+            class="search-input w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-purple-500 transition duration-300"
+            oninput="filterCandidates()"
+          >
+        </div>
+        
+        <div class="flex items-center space-x-4">
+          <select id="partyFilter" onchange="filterCandidates()" class="px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-purple-500 transition duration-300">
+            <option value="">All Parties</option>
+            <option value="Progressive Party">Progressive Party</option>
+            <option value="Liberty Union">Liberty Union</option>
+            <option value="Citizens Alliance">Citizens Alliance</option>
+            <option value="Reform Coalition">Reform Coalition</option>
+          </select>
+          
+          <select id="sortBy" onchange="sortCandidates()" class="px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-purple-500 transition duration-300">
+            <option value="votes">Sort by Votes</option>
+            <option value="name">Sort by Name</option>
+            <option value="party">Sort by Party</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center mb-8">
+      <button onclick="goToVoting()" class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:from-purple-700 hover:to-indigo-700 transform hover:scale-105 transition duration-300 shadow-xl hover:shadow-2xl">
+        <i class="fas fa-vote-yea mr-2"></i>
+        Cast Your Vote Now
+      </button>
+    </div>
+
+    <div id="candidatesGrid" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      </div>
+
+    <div class="mt-16 bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
+      <h2 class="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-6 text-center">Quick Comparison</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b-2 border-purple-100">
+              <th class="text-left py-4 px-4 font-semibold text-gray-700">Candidate</th>
+              <th class="text-left py-4 px-4 font-semibold text-gray-700">Party</th>
+              <th class="text-left py-4 px-4 font-semibold text-gray-700">Current Votes</th>
+              <th class="text-left py-4 px-4 font-semibold text-gray-700">Experience</th>
+              <th class="text-left py-4 px-4 font-semibold text-gray-700">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="comparisonTable">
+            </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <div id="candidateModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+      <div class="p-8">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">Candidate Details</h2>
+          <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-2xl hover:rotate-90 transition duration-300">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div id="modalContent">
+          </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="bg-gradient-to-r from-gray-900 to-gray-800 text-white mt-20">
+    <div class="max-w-7xl mx-auto px-6 py-12">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div class="col-span-2">
+          <div class="flex items-center space-x-3 mb-4">
+            <div class="w-10 h-10 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center">
+              <i class="fas fa-vote-yea text-white"></i>
+            </div>
+            <span class="font-bold text-xl">FairVote</span>
+          </div>
+          <p class="text-gray-400 mb-4">Making democracy more accessible and transparent through innovative voting solutions.</p>
+        </div>
+        <div>
+          <h3 class="font-semibold text-lg mb-4">Links</h3>
+          <ul class="space-y-2 text-gray-400">
+            <li><a href="./index.html" class="hover:text-white transition">Home</a></li>
+            <li><a href="./dashboard.html" class="hover:text-white transition">Dashboard</a></li>
+            <li><a href="./candidate.html" class="hover:text-white transition">Candidates</a></li>
+            <li><a href="./vote.html" class="hover:text-white transition">Vote Now</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="font-semibold text-lg mb-4">Legal</h3>
+          <ul class="space-y-2 text-gray-400">
+            <li><a href="#" class="hover:text-white transition">Privacy Policy</a></li>
+            <li><a href="#" class="hover:text-white transition">Terms of Service</a></li>
+            <li><a href="#" class="hover:text-white transition">Contact Us</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+        <p>&copy; 2025 FairVote. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Candidate data
+    const candidates = [
+      {
+        id: 1,
+        name: "Jane Smith",
+        party: "Progressive Party",
+        position: "Mayor",
+        votes: 245,
+        bio: "Jane Smith is an experienced public servant with 10 years of experience in local government. She has championed progressive policies and community engagement throughout her career.",
+        image: "https://storage.googleapis.com/a1aa/image/b499e3c7-82cf-413f-aa70-df431a8ec71c.jpg",
+        experience: "10 years",
+        pastElections: [
+          { year: 2018, position: "Council Member", votes: 800, totalVotes: 1500, percentage: 53, won: true },
+          { year: 2020, position: "Deputy Mayor", votes: 1200, totalVotes: 3000, percentage: 40, won: false }
+        ],
+        policies: ["Healthcare Reform", "Education Funding", "Climate Action", "Affordable Housing"]
+      },
+      {
+        id: 2,
+        name: "Marcus Johnson",
+        party: "Liberty Union",
+        position: "Mayor",
+        votes: 180,
+        bio: "Marcus Johnson is a business leader committed to economic growth and community development. He brings extensive private sector experience to public service.",
+        image: "https://storage.googleapis.com/a1aa/image/8ced3e16-8317-4189-cfac-78dc22443770.jpg",
+        experience: "8 years",
+        pastElections: [
+          { year: 2018, position: "Deputy Mayor", votes: 750, totalVotes: 1600, percentage: 47, won: true },
+          { year: 2020, position: "Mayor", votes: 900, totalVotes: 3000, percentage: 30, won: false }
+        ],
+        policies: ["Economic Development", "Tax Reform", "Infrastructure", "Business Growth"]
+      },
+      {
+        id: 3,
+        name: "Elena Rodriguez",
+        party: "Citizens Alliance",
+        position: "Mayor",
+        votes: 310,
+        bio: "Elena Rodriguez is a community organizer focused on social justice and inclusive policies. She has worked tirelessly to represent underserved communities.",
+        image: "https://storage.googleapis.com/a1aa/image/fc6a15ae-2565-476a-26e9-1b951021c38a.jpg",
+        experience: "6 years",
+        pastElections: [
+          { year: 2018, position: "City Council", votes: 950, totalVotes: 1800, percentage: 53, won: true },
+          { year: 2020, position: "City Council", votes: 1400, totalVotes: 2500, percentage: 56, won: true }
+        ],
+        policies: ["Social Justice", "Community Development", "Public Safety Reform", "Youth Programs"]
+      },
+      {
+        id: 4,
+        name: "David Chen",
+        party: "Reform Coalition",
+        position: "Mayor",
+        votes: 275,
+        bio: "David Chen is a former educator advocating for transparency and educational improvements. He believes in data-driven governance and accountability.",
+        image: "https://storage.googleapis.com/a1aa/image/ae457010-8cd0-46aa-28ba-24ed498d4f9f.jpg",
+        experience: "12 years",
+        pastElections: [
+          { year: 2016, position: "School Board", votes: 1200, totalVotes: 2000, percentage: 60, won: true },
+          { year: 2020, position: "City Council", votes: 1100, totalVotes: 2500, percentage: 44, won: false }
+        ],
+        policies: ["Education Reform", "Government Transparency", "Fiscal Responsibility", "Technology Innovation"]
+      }
+    ];
+
+    let filteredCandidates = [...candidates];
+    let currentUser = "Guest"; // Default value
+
+    // Initialize page
+    function initializePage() {
+      // Retrieve username from localStorage
+      const storedUsername = localStorage.getItem('fairVoteUsername');
+      if (storedUsername) {
+        currentUser = storedUsername;
+      }
+      document.getElementById('currentUser').textContent = currentUser;
+      
+      updateStats();
+      renderCandidates();
+      renderComparisonTable();
+    }
+
+    // Update stats section
+    function updateStats() {
+      const totalVotes = candidates.reduce((sum, candidate) => sum + candidate.votes, 0);
+      const leadingCandidate = candidates.reduce((prev, current) => (prev.votes > current.votes) ? prev : current);
+      
+      document.getElementById('totalVotes').textContent = totalVotes.toLocaleString();
+      document.getElementById('leadingCandidate').textContent = leadingCandidate.name;
+    }
+
+    // Enhanced render candidates with better animations
+    function renderCandidates() {
+      const grid = document.getElementById('candidatesGrid');
+      const totalVotes = candidates.reduce((sum, candidate) => sum + candidate.votes, 0);
+      
+      grid.innerHTML = filteredCandidates.map((candidate, index) => {
+        const votePercentage = totalVotes > 0 ? (candidate.votes / totalVotes * 100).toFixed(1) : 0;
+        const isLeading = candidate.votes === Math.max(...candidates.map(c => c.votes));
+        
+        return `
+          <article class="candidate-card bg-white rounded-2xl p-6 border border-gray-100 shadow-sm relative overflow-hidden" style="animation-delay: ${index * 0.1}s">
+            ${isLeading ? '<div class="absolute top-4 right-4 bg-yellow-100 text-yellow-800 text-xs font-bold px-2 py-1 rounded-full"><i class="fas fa-crown mr-1"></i>Leading</div>' : ''}
+            
+            <div class="flex items-start space-x-4 mb-4">
+              <div class="relative">
+                <img src="${candidate.image}" alt="${candidate.name}" class="w-16 h-16 rounded-full object-cover border-2 border-purple-100">
+                <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-green-400 rounded-full border-2 border-white flex items-center justify-center">
+                  <i class="fas fa-check text-white text-xs"></i>
+                </div>
+              </div>
+              <div class="flex-1">
+                <div class="flex items-center justify-between mb-2">
+                  <h3 class="text-xl font-bold text-gray-900">${candidate.name}</h3>
+                  <span class="bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-800 text-xs font-semibold px-3 py-1 rounded-full">${candidate.position}</span>
+                </div>
+                <p class="text-purple-600 font-medium mb-1">${candidate.party}</p>
+                <p class="text-gray-600 text-sm leading-relaxed">${candidate.bio}</p>
+              </div>
+            </div>
+            
+            <div class="mb-4">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-gray-700">Current Support</span>
+                <span class="text-sm font-bold text-purple-600">${candidate.votes} votes (${votePercentage}%)</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                <div class="vote-bar h-2 rounded-full" style="width: ${votePercentage}%"></div>
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 mb-4">
+              <div class="text-center p-3 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg">
+                <div class="text-2xl font-bold text-purple-600">${candidate.experience}</div>
+                <div class="text-xs text-gray-600 font-medium">Experience</div>
+              </div>
+              <div class="text-center p-3 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg">
+                <div class="text-2xl font-bold text-green-600">${candidate.pastElections.filter(e => e.won).length}</div>
+                <div class="text-xs text-gray-600 font-medium">Elections Won</div>
+              </div>
+            </div>
+            
+            <div class="flex space-x-2">
+              <button onclick="showCandidateDetails(${candidate.id})" class="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-3 px-4 rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition duration-300 transform hover:scale-105">
+                <i class="fas fa-info-circle mr-2"></i>
+                View Details
+              </button>
+              <button onclick="voteForCandidate(${candidate.id})" class="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-4 rounded-lg font-semibold hover:from-green-700 hover:to-emerald-700 transition duration-300 transform hover:scale-105">
+                <i class="fas fa-vote-yea mr-2"></i>
+                Vote Now
+              </button>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    // Enhanced render comparison table
+    function renderComparisonTable() {
+      const table = document.getElementById('comparisonTable');
+      table.innerHTML = candidates.map((candidate, index) => {
+        const isLeading = candidate.votes === Math.max(...candidates.map(c => c.votes));
+        return `
+          <tr class="border-b border-gray-100 hover:bg-gradient-to-r hover:from-purple-50 hover:to-indigo-50 transition duration-300">
+            <td class="py-4 px-4">
+              <div class="flex items-center space-x-3">
+                <img src="${candidate.image}" alt="${candidate.name}" class="w-10 h-10 rounded-full object-cover">
+                <div>
+                  <span class="font-semibold text-gray-900">${candidate.name}</span>
+                  ${isLeading ? '<span class="ml-2 text-yellow-500"><i class="fas fa-crown"></i></span>' : ''}
+                </div>
+              </div>
+            </td>
+            <td class="py-4 px-4 text-gray-600">${candidate.party}</td>
+            <td class="py-4 px-4">
+              <span class="font-semibold text-purple-600">${candidate.votes}</span>
+            </td>
+            <td class="py-4 px-4 text-gray-600">${candidate.experience}</td>
+            <td class="py-4 px-4">
+              <button onclick="showCandidateDetails(${candidate.id})" class="text-purple-600 hover:text-purple-800 font-medium transition duration-300 hover:scale-110">
+                <i class="fas fa-eye mr-1"></i>View
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Show candidate details in modal
+    function showCandidateDetails(candidateId) {
+      const candidate = candidates.find(c => c.id === candidateId);
+      if (!candidate) return;
+      
+      const modal = document.getElementById('candidateModal');
+      const content = document.getElementById('modalContent');
+      
+      content.innerHTML = `
+        <div class="flex items-center space-x-4 mb-6">
+          <img src="${candidate.image}" alt="${candidate.name}" class="w-20 h-20 rounded-full object-cover border-4 border-purple-200">
+          <div>
+            <h3 class="text-2xl font-bold text-gray-900">${candidate.name}</h3>
+            <p class="text-purple-600 font-semibold">${candidate.party}</p>
+            <p class="text-gray-600">Running for ${candidate.position}</p>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div class="bg-gradient-to-r from-purple-50 to-indigo-50 p-4 rounded-lg text-center">
+            <div class="text-3xl font-bold text-purple-600">${candidate.votes}</div>
+            <div class="text-sm text-gray-600">Current Votes</div>
+          </div>
+          <div class="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg text-center">
+            <div class="text-3xl font-bold text-green-600">${candidate.experience}</div>
+            <div class="text-sm text-gray-600">Experience</div>
+          </div>
+          <div class="bg-gradient-to-r from-blue-50 to-cyan-50 p-4 rounded-lg text-center">
+            <div class="text-3xl font-bold text-blue-600">${candidate.pastElections.filter(e => e.won).length}</div>
+            <div class="text-sm text-gray-600">Elections Won</div>
+          </div>
+        </div>
+        
+        <div class="mb-6">
+          <h4 class="text-xl font-bold text-gray-900 mb-3">Biography</h4>
+          <p class="text-gray-600 leading-relaxed">${candidate.bio}</p>
+        </div>
+        
+        <div class="mb-6">
+          <h4 class="text-xl font-bold text-gray-900 mb-3">Key Policies</h4>
+          <div class="grid grid-cols-2 gap-2">
+            ${candidate.policies.map(policy => `
+              <div class="bg-gradient-to-r from-purple-50 to-indigo-50 px-3 py-2 rounded-lg text-sm font-medium text-purple-800">
+                <i class="fas fa-check-circle mr-2"></i>${policy}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        
+        <div class="mb-6">
+          <h4 class="text-xl font-bold text-gray-900 mb-3">Election History</h4>
+          <div class="space-y-3">
+            ${candidate.pastElections.map(election => `
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="font-semibold text-gray-900">${election.year} - ${election.position}</span>
+                  <span class="px-2 py-1 rounded-full text-xs font-bold ${election.won ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                    ${election.won ? 'Won' : 'Lost'}
+                  </span>
+                </div>
+                <div class="text-sm text-gray-600">
+                  Votes: ${election.votes} out of ${election.totalVotes} (${election.percentage}%)
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="text-center mt-8">
+          <button onclick="voteForCandidate(${candidate.id}); closeModal();" class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:from-purple-700 hover:to-indigo-700 transform hover:scale-105 transition duration-300 shadow-xl">
+            <i class="fas fa-vote-yea mr-2"></i>
+            Vote for ${candidate.name}
+          </button>
+        </div>
+      `;
+      modal.classList.remove('hidden');
+    }
+
+    // Close the modal
+    function closeModal() {
+      document.getElementById('candidateModal').classList.add('hidden');
+    }
+
+    // Filter candidates based on search input and party filter
+    function filterCandidates() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const partyFilter = document.getElementById('partyFilter').value;
+
+      filteredCandidates = candidates.filter(candidate => {
+        const matchesSearch = candidate.name.toLowerCase().includes(searchTerm) ||
+                              candidate.party.toLowerCase().includes(searchTerm) ||
+                              candidate.bio.toLowerCase().includes(searchTerm);
+        const matchesParty = partyFilter === "" || candidate.party === partyFilter;
+        return matchesSearch && matchesParty;
+      });
+
+      sortCandidates(); // Re-sort after filtering
+    }
+
+    // Sort candidates based on selected criteria
+    function sortCandidates() {
+      const sortBy = document.getElementById('sortBy').value;
+
+      filteredCandidates.sort((a, b) => {
+        if (sortBy === "votes") {
+          return b.votes - a.votes; // Descending by votes
+        } else if (sortBy === "name") {
+          return a.name.localeCompare(b.name); // Alphabetical by name
+        } else if (sortBy === "party") {
+          return a.party.localeCompare(b.party); // Alphabetical by party
+        }
+        return 0;
+      });
+      renderCandidates();
+    }
+
+    // Simulate voting for a candidate (for demonstration purposes)
+    function voteForCandidate(candidateId) {
+      const candidate = candidates.find(c => c.id === candidateId);
+      if (candidate) {
+        candidate.votes++;
+        updateStats();
+        renderCandidates();
+        renderComparisonTable();
+        alert(`You have voted for ${candidate.name}! Thank you for your vote.`);
+      }
+    }
+
+    // Redirect to the voting page
+    function goToVoting() {
+      window.location.href = './vote.html';
+    }
+
+    // Simulate logout (for demonstration purposes)
+    function handleLogout() {
+      alert("You have been logged out.");
+      // In a real application, you would clear session data, redirect to login, etc.
+      localStorage.removeItem('fairVoteUsername'); // Clear username on logout
+      currentUser = "Guest";
+      document.getElementById('currentUser').textContent = currentUser;
+    }
+
+    // Initialize the page when the DOM is fully loaded
+    document.addEventListener('DOMContentLoaded', initializePage);
+  </script>
+</body>
+</html>

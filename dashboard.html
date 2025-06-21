@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FairVote - Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    :root {
+      --primary-color: #4F46E5;
+      --primary-light: #E0E7FF;
+      --primary-dark: #3730A3;
+      --success-color: #22C55E;
+      --text-primary: #111827;
+      --text-secondary: #6B7280;
+      --text-muted: #9CA3AF;
+      --border-color: #E5E7EB;
+      --bg-primary: #FFFFFF;
+      --bg-secondary: #F9FAFB;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .tab-button {
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .tab-button.active {
+      background-color: var(--primary-color);
+      color: white;
+      font-weight: 600;
+    }
+
+    .tab-button:hover:not(.active) {
+      background-color: #F3F4F6;
+    }
+
+    .stat-card {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .candidate-card {
+      transition: all 0.2s ease;
+    }
+
+    .candidate-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border-color: var(--primary-color);
+    }
+
+    .loading-skeleton {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: loading 1.5s infinite;
+    }
+
+    @keyframes loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .form-input {
+      transition: all 0.2s ease;
+    }
+
+    .form-input:focus {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
+    }
+
+    .success-message {
+      animation: slideDown 0.3s ease-out;
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .chart-container {
+      position: relative;
+      height: 300px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 12px;
+      padding: 1rem;
+    }
+
+    @media (max-width: 640px) {
+      .tab-button {
+        font-size: 0.75rem;
+        padding: 0.5rem 0.75rem;
+      }
+      
+      .stat-card {
+        min-width: 140px;
+      }
+    }
+  </style>
+</head>
+<body class="bg-[var(--bg-secondary)] text-[var(--text-primary)] min-h-screen flex flex-col">
+  <header class="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-[var(--border-color)] bg-[var(--bg-primary)] shadow-sm">
+    <div class="flex items-center space-x-2">
+      <i class="fas fa-vote-yea text-[var(--primary-color)] text-xl"></i>
+      <span class="font-bold text-[var(--text-primary)] text-lg select-none">FairVote</span>
+    </div>
+    <nav class="hidden md:flex space-x-8 text-sm text-[var(--text-secondary)] font-medium">
+      <a href="./index.html" class="hover:text-[var(--text-primary)] transition-colors">Home</a>
+      <a href="./dashboard.html" class="text-[var(--primary-color)] font-semibold">Dashboard</a>
+      <a href="./candidate.html" class="hover:text-[var(--text-primary)] transition-colors">Candidates</a>
+      <a href="./vote.html" class="hover:text-[var(--text-primary)] transition-colors">Vote</a>
+    </nav>
+    <div class="flex items-center space-x-3 text-sm">
+      <div class="flex items-center space-x-2">
+        <div class="w-8 h-8 rounded-full bg-[var(--primary-light)] flex items-center justify-center text-[var(--primary-color)] font-semibold select-none">
+          <span id="userInitial">?</span>
+        </div>
+        <span id="headerUsername" class="font-semibold text-[var(--text-primary)] hidden sm:block">Guest User</span>
+      </div>
+      <button onclick="handleLogout()" class="flex items-center space-x-1 border border-[var(--border-color)] rounded-lg px-3 py-2 text-[var(--text-secondary)] hover:bg-gray-50 transition-colors">
+        <i class="fas fa-sign-out-alt"></i>
+        <a href="./index.html">Log Out</a>
+      </button>
+    </div>
+  </header>
+
+  <div id="successMessage" class="hidden bg-green-50 border border-green-200 text-green-800 px-4 py-3 mx-4 mt-4 rounded-lg success-message">
+    <div class="flex items-center">
+      <i class="fas fa-check-circle mr-2"></i>
+      <span id="successText"></span>
+    </div>
+  </div>
+
+  <main class="px-4 sm:px-6 py-6 max-w-7xl mx-auto w-full flex-grow">
+    <div class="mb-6">
+      <h1 id="welcomeMessage" class="text-[var(--text-primary)] font-bold text-2xl sm:text-3xl mb-2">
+        Welcome back, <span id="welcomeUsername">Guest</span>
+      </h1>
+      <p class="text-[var(--text-secondary)] text-sm sm:text-base">
+        Your comprehensive dashboard for the current election
+      </p>
+    </div>
+
+    <div class="flex space-x-1 mb-8 bg-white rounded-xl border border-[var(--border-color)] p-1 text-sm font-medium shadow-sm max-w-md">
+      <button class="tab-button active rounded-lg px-4 py-2 flex-1" data-tab="overview">
+        <i class="fas fa-chart-line mr-2"></i>Overview
+      </button>
+      <button class="tab-button rounded-lg px-4 py-2 flex-1" data-tab="candidates">
+        <i class="fas fa-users mr-2"></i>Candidates
+      </button>
+      <button class="tab-button rounded-lg px-4 py-2 flex-1" data-tab="suggestions">
+        <i class="fas fa-lightbulb mr-2"></i>Suggestions
+      </button>
+    </div>
+
+    <div class="tab-content active" id="overview-tab">
+      <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="stat-card bg-white rounded-xl border border-[var(--border-color)] p-6 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <div class="p-2 bg-blue-50 rounded-lg">
+              <i class="fas fa-vote-yea text-blue-600 text-xl"></i>
+            </div>
+            <span class="text-xs text-green-600 font-semibold bg-green-50 px-2 py-1 rounded-full">+12.5%</span>
+          </div>
+          <h3 class="text-[var(--text-secondary)] text-sm font-medium mb-1">Total Votes</h3>
+          <p class="text-2xl font-bold text-[var(--text-primary)] mb-2" id="totalVotes">1,247</p>
+          <p class="text-xs text-[var(--text-muted)]">Votes cast in current election</p>
+        </div>
+
+        <div class="stat-card bg-white rounded-xl border border-[var(--border-color)] p-6 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <div class="p-2 bg-green-50 rounded-lg">
+              <i class="fas fa-percentage text-green-600 text-xl"></i>
+            </div>
+            <span class="text-xs text-green-600 font-semibold bg-green-50 px-2 py-1 rounded-full">+1.5%</span>
+          </div>
+          <h3 class="text-[var(--text-secondary)] text-sm font-medium mb-1">Voter Turnout</h3>
+          <p class="text-2xl font-bold text-[var(--text-primary)] mb-2" id="voterTurnout">47%</p>
+          <p class="text-xs text-[var(--text-muted)]">Of eligible voters participating</p>
+        </div>
+
+        <div class="stat-card bg-white rounded-xl border border-[var(--border-color)] p-6 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <div class="p-2 bg-purple-50 rounded-lg">
+              <i class="fas fa-lightbulb text-purple-600 text-xl"></i>
+            </div>
+            <span class="text-xs text-blue-600 font-semibold bg-blue-50 px-2 py-1 rounded-full">New</span>
+          </div>
+          <h3 class="text-[var(--text-secondary)] text-sm font-medium mb-1">Suggestions</h3>
+          <p class="text-2xl font-bold text-[var(--text-primary)] mb-2" id="totalSuggestions">23</p>
+          <p class="text-xs text-[var(--text-muted)]">Community suggestions submitted</p>
+        </div>
+
+        <div class="stat-card bg-white rounded-xl border border-[var(--border-color)] p-6 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <div class="p-2 bg-orange-50 rounded-lg">
+              <i class="fas fa-clock text-orange-600 text-xl"></i>
+            </div>
+            <span class="text-xs text-red-600 font-semibold bg-red-50 px-2 py-1 rounded-full" id="timeRemaining">5 days</span>
+          </div>
+          <h3 class="text-[var(--text-secondary)] text-sm font-medium mb-1">Election Ends</h3>
+          <p class="text-lg font-bold text-[var(--text-primary)] mb-2" id="electionEndDate">June 15, 2025</p>
+          <p class="text-xs text-[var(--text-muted)]">Time remaining to vote</p>
+        </div>
+      </section>
+
+      <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="bg-white rounded-xl border border-[var(--border-color)] p-6 shadow-sm">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-semibold text-[var(--text-primary)]">Voting Trends</h2>
+            <button onclick="refreshChart()" class="text-[var(--primary-color)] text-sm font-medium hover:underline flex items-center">
+              <i class="fas fa-sync-alt mr-1"></i>Refresh
+            </button>
+          </div>
+          <div class="chart-container">
+            <canvas id="votingTrendsChart"></canvas>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-[var(--border-color)] p-6 shadow-sm">
+          <h2 class="text-lg font-semibold text-[var(--text-primary)] mb-4">Current Vote Distribution</h2>
+          <div class="chart-container">
+            <canvas id="voteDistributionChart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <section class="bg-white rounded-xl border border-[var(--border-color)] p-6 shadow-sm">
+        <h2 class="text-lg font-semibold text-[var(--text-primary)] mb-4">Recent Activity</h2>
+        <div class="space-y-3" id="recentActivity">
+          </div>
+      </section>
+    </div>
+
+    <div class="tab-content" id="candidates-tab">
+      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6">
+        <div>
+          <h2 class="text-2xl font-bold text-[var(--text-primary)] mb-2">Current Candidates</h2>
+          <p class="text-[var(--text-secondary)]">Learn about the candidates running in the current election</p>
+        </div>
+        <div class="flex space-x-3 mt-4 sm:mt-0">
+          <button onclick="window.open('./vote.html', '_blank')" class="bg-[var(--primary-color)] text-white text-sm font-semibold rounded-lg px-4 py-2 hover:bg-[var(--primary-dark)] transition-colors">
+            <i class="fas fa-vote-yea mr-2"></i>Vote Now
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="candidatesGrid">
+        </div>
+    </div>
+
+    <div class="tab-content" id="suggestions-tab">
+      <div class="max-w-2xl mx-auto">
+        <div class="text-center mb-8">
+          <h2 class="text-2xl font-bold text-[var(--text-primary)] mb-2">Share Your Ideas</h2>
+          <p class="text-[var(--text-secondary)]">Help improve our democracy by sharing your suggestions and feedback</p>
+        </div>
+
+        <form id="suggestionForm" class="bg-white border border-[var(--border-color)] rounded-xl p-8 shadow-sm">
+          <div class="mb-6">
+            <label for="title" class="block text-sm font-semibold text-[var(--text-primary)] mb-2">
+              Suggestion Title *
+            </label>
+            <input
+              id="title"
+              name="title"
+              type="text"
+              placeholder="Enter a descriptive title for your suggestion"
+              class="form-input w-full text-sm border border-[var(--border-color)] rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)] focus:border-transparent"
+              required
+            />
+            <div id="titleError" class="text-red-500 text-xs mt-1 hidden"></div>
+          </div>
+
+          <div class="mb-6">
+            <label for="category" class="block text-sm font-semibold text-[var(--text-primary)] mb-2">
+              Category
+            </label>
+            <select
+              id="category"
+              name="category"
+              class="form-input w-full text-sm border border-[var(--border-color)] rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)] focus:border-transparent"
+            >
+              <option value="">Select a category</option>
+              <option value="policy">Policy Suggestion</option>
+              <option value="candidate">Candidate Feedback</option>
+              <option value="platform">Platform Improvement</option>
+              <option value="general">General Feedback</option>
+            </select>
+          </div>
+
+          <div class="mb-6">
+            <label for="candidate" class="block text-sm font-semibold text-[var(--text-primary)] mb-2">
+              Related Candidate (Optional)
+            </label>
+            <select
+              id="candidate"
+              name="candidate"
+              class="form-input w-full text-sm border border-[var(--border-color)] rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)] focus:border-transparent"
+            >
+              <option value="">Select a candidate</option>
+              </select>
+          </div>
+
+          <div class="mb-6">
+            <label for="message" class="block text-sm font-semibold text-[var(--text-primary)] mb-2">
+              Detailed Message *
+            </label>
+            <textarea
+              id="message"
+              name="message"
+              rows="5"
+              placeholder="Please provide detailed information about your suggestion or feedback..."
+              class="form-input w-full text-sm border border-[var(--border-color)] rounded-lg px-4 py-3 resize-none focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)] focus:border-transparent"
+              required
+            ></textarea>
+            <div id="messageError" class="text-red-500 text-xs mt-1 hidden"></div>
+            <div class="text-xs text-[var(--text-muted)] mt-2">
+              <span id="charCount">0</span>/500 characters
+            </div>
+          </div>
+
+          <div class="mb-6">
+            <label class="flex items-center">
+              <input type="checkbox" id="anonymous" name="anonymous" class="rounded border-[var(--border-color)] text-[var(--primary-color)] focus:ring-[var(--primary-color)]">
+              <span class="ml-2 text-sm text-[var(--text-secondary)]">Submit anonymously</span>
+            </label>
+          </div>
+
+          <button
+            type="submit"
+            id="submitBtn"
+            class="w-full bg-[var(--primary-color)] text-white font-semibold rounded-lg py-3 hover:bg-[var(--primary-dark)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)] focus:ring-offset-2"
+          >
+            <i class="fas fa-paper-plane mr-2"></i>
+            Submit Suggestion
+          </button>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <footer class="border-t border-[var(--border-color)] mt-auto bg-white">
+    <div class="max-w-7xl mx-auto px-6 py-10 flex flex-col md:flex-row md:justify-between gap-10 md:gap-0">
+      <div class="flex flex-col gap-3 max-w-xs">
+        <div class="flex items-center gap-2 text-[var(--text-primary)] font-bold text-lg">
+          <i class="fas fa-vote-yea text-[var(--primary-color)]"></i>
+          <span>FairVote</span>
+        </div>
+        <p class="text-sm text-[var(--text-secondary)] leading-relaxed">
+          Making democracy more accessible and transparent through innovative voting solutions.
+        </p>
+      </div>
+      <div class="flex flex-col gap-3 text-[var(--text-secondary)] text-sm">
+        <span class="font-semibold text-[var(--text-primary)]">Quick Links</span>
+        <a href="./index.html" class="hover:text-[var(--primary-color)] transition-colors">Home</a>
+        <a href="./candidate.html" class="hover:text-[var(--primary-color)] transition-colors">Candidates</a>
+        <a href="./vote.html" class="hover:text-[var(--primary-color)] transition-colors">Vote Now</a>
+      </div>
+      <div class="flex flex-col gap-3 text-[var(--text-secondary)] text-sm">
+        <span class="font-semibold text-[var(--text-primary)]">Support</span>
+        <a href="#" class="hover:text-[var(--primary-color)] transition-colors">Privacy Policy</a>
+        <a href="#" class="hover:text-[var(--primary-color)] transition-colors">Terms of Service</a>
+        <a href="#" class="hover:text-[var(--primary-color)] transition-colors">Contact Us</a>
+      </div>
+    </div>
+    <div class="max-w-7xl mx-auto px-6 pb-6 text-center text-[var(--text-muted)] text-xs">
+      © 2025 FairVote. All rights reserved.
+    </div>
+  </footer>
+
+<script>
+// Global state management
+const AppState = {
+  username: null,
+  candidates: [
+    {
+      id: 'jane-smith',
+      name: 'Jane Smith',
+      party: 'Progressive Party',
+      position: 'Mayor',
+      description: 'Experienced public servant with 10 years in local government, focusing on sustainable development and social equity.',
+      votes: 312,
+      image: 'https://storage.googleapis.com/a1aa/image/b499e3c7-82cf-413f-aa70-df431a8ec71c.jpg',
+      detailsUrl: './jane_smith.html'
+    },
+    {
+      id: 'marcus-johnson',
+      name: 'Marcus Johnson',
+      party: 'Liberty Union',
+      position: 'Mayor',
+      description: 'Business leader committed to economic growth, job creation, and streamlined government operations.',
+      votes: 287,
+      image: 'https://storage.googleapis.com/a1aa/image/8ced3e16-8317-4189-cfac-78dc22443770.jpg',
+      detailsUrl: './marcus_johnson.html'
+    },
+    {
+      id: 'elena-rodriguez',
+      name: 'Elena Rodriguez',
+      party: 'Citizens Alliance',
+      position: 'Mayor',
+      description: 'Community organizer focused on social justice, affordable housing, and inclusive policies for all residents.',
+      votes: 398,
+      image: 'https://storage.googleapis.com/a1aa/image/fc6a15ae-2565-476a-26e9-1b951021c38a.jpg',
+      detailsUrl: './elena_rodriguez.html'
+    },
+    {
+      id: 'david-chen',
+      name: 'David Chen',
+      party: 'Reform Coalition',
+      position: 'Mayor',
+      description: 'Former educator advocating for government transparency, educational improvements, and fiscal responsibility.',
+      votes: 250,
+      image: 'https://storage.googleapis.com/a1aa/image/ae457010-8cd0-46aa-28ba-24ed498d4f9f.jpg',
+      detailsUrl: './david_chen.html'
+    }
+  ],
+  votingData: [
+    { day: 'Mon', votes: 45 },
+    { day: 'Tue', votes: 78 },
+    { day: 'Wed', votes: 92 },
+    { day: 'Thu', votes: 134 },
+    { day: 'Fri', votes: 156 },
+    { day: 'Sat', votes: 198 },
+    { day: 'Sun', votes: 167 }
+  ],
+  suggestions: [] // To store submitted suggestions
+};
+
+// Utility functions
+function showSuccessMessage(message) {
+  const successDiv = document.getElementById('successMessage');
+  const successText = document.getElementById('successText');
+  successText.textContent = message;
+  successDiv.classList.remove('hidden');
+  
+  setTimeout(() => {
+    successDiv.classList.add('hidden');
+  }, 5000);
+}
+
+function validateInput(input, errorElement, validationType) {
+  const value = input.value.trim();
+  let isValid = true;
+  let errorMessage = '';
+
+  switch (validationType) {
+    case 'required':
+      if (!value) {
+        isValid = false;
+        errorMessage = 'This field is required';
+      }
+      break;
+    case 'title':
+      if (!value) {
+        isValid = false;
+        errorMessage = 'Title is required';
+      } else if (value.length < 5) {
+        isValid = false;
+        errorMessage = 'Title must be at least 5 characters long';
+      }
+      break;
+    case 'message':
+      if (!value) {
+        isValid = false;
+        errorMessage = 'Message is required';
+      } else if (value.length < 10) {
+        isValid = false;
+        errorMessage = 'Message must be at least 10 characters long';
+      } else if (value.length > 500) {
+        isValid = false;
+        errorMessage = 'Message cannot exceed 500 characters';
+      }
+      break;
+  }
+
+  if (isValid) {
+    errorElement.classList.add('hidden');
+    input.classList.remove('border-red-500');
+    input.classList.add('border-green-500'); // Add green border on valid
+  } else {
+    errorElement.textContent = errorMessage;
+    errorElement.classList.remove('hidden');
+    input.classList.remove('border-green-500'); // Remove green border on invalid
+    input.classList.add('border-red-500');
+  }
+
+  return isValid;
+}
+
+// Initialize user data
+function initializeUser() {
+  let username = AppState.username;
+  
+  if (!username) {
+    try {
+      username = localStorage.getItem('fairVoteUsername');
+    } catch (e) {
+      console.log('localStorage not available');
+    }
+  }
+  
+  if (!username) {
+    const demoNames = ['Alex Thompson', 'Sarah Johnson', 'Mike Rodriguez', 'Emma Chen'];
+    username = demoNames[Math.floor(Math.random() * demoNames.length)];
+  }
+
+  AppState.username = username;
+  
+  const welcomeUsername = document.getElementById('welcomeUsername');
+  const headerUsername = document.getElementById('headerUsername');
+  const userInitial = document.getElementById('userInitial');
+  
+  if (welcomeUsername) welcomeUsername.textContent = username;
+  if (headerUsername) headerUsername.textContent = username;
+  if (userInitial) userInitial.textContent = username.charAt(0).toUpperCase();
+}
+
+function handleLogout() {
+  if (confirm('Are you sure you want to log out?')) {
+    try {
+      localStorage.removeItem('fairVoteUsername');
+    } catch (e) {
+      console.log('localStorage not available');
+    }
+    AppState.username = null; // Clear username from AppState
+    window.location.href = './index.html'; // Redirect to home or login page
+  }
+}
+
+// Tab functionality
+function initializeTabs() {
+  const tabButtons = document.querySelectorAll('.tab-button');
+  const tabContents = document.querySelectorAll('.tab-content');
+
+  tabButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      tabButtons.forEach(btn => btn.classList.remove('active'));
+      tabContents.forEach(content => content.classList.remove('active'));
+
+      button.classList.add('active');
+
+      const tabId = button.getAttribute('data-tab');
+      const tabContent = document.getElementById(`${tabId}-tab`);
+      if (tabContent) {
+        tabContent.classList.add('active');
+        
+        // Initialize tab-specific content
+        if (tabId === 'candidates') {
+          renderCandidates();
+        } else if (tabId === 'suggestions') {
+          populateCandidateSelect();
+        } else if (tabId === 'overview') {
+            initializeCharts(); // Re-render charts when overview tab is active
+        }
+      }
+    });
+  });
+}
+
+// Chart initialization and updates
+let votingTrendsChartInstance = null;
+let voteDistributionChartInstance = null;
+
+function initializeCharts() {
+  // Destroy existing charts if they exist
+  if (votingTrendsChartInstance) {
+    votingTrendsChartInstance.destroy();
+  }
+  if (voteDistributionChartInstance) {
+    voteDistributionChartInstance.destroy();
+  }
+
+  // Voting Trends Chart
+  const trendsCtx = document.getElementById('votingTrendsChart');
+  if (trendsCtx) {
+    votingTrendsChartInstance = new Chart(trendsCtx, {
+      type: 'line',
+      data: {
+        labels: AppState.votingData.map(d => d.day),
+        datasets: [{
+          label: 'Daily Votes',
+          data: AppState.votingData.map(d => d.votes),
+          borderColor: 'white', /* Changed to white for better contrast on gradient background */
+          backgroundColor: 'rgba(255, 255, 255, 0.2)', /* Lighter fill */
+          borderWidth: 3,
+          fill: true,
+          tension: 0.4,
+          pointBackgroundColor: 'white',
+          pointBorderColor: '#ffffff',
+          pointBorderWidth: 2,
+          pointRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `Votes: ${context.raw}`;
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: 'rgba(255, 255, 255, 0.2)', // White, semi-transparent grid lines
+              drawBorder: false
+            },
+            ticks: {
+              color: 'white' // White tick labels
+            },
+            title: {
+                display: true,
+                text: 'Number of Votes',
+                color: 'white'
+            }
+          },
+          x: {
+            grid: {
+              color: 'rgba(255, 255, 255, 0.2)', // White, semi-transparent grid lines
+              drawBorder: false
+            },
+            ticks: {
+              color: 'white' // White tick labels
+            },
+            title: {
+                display: true,
+                text: 'Day of Week',
+                color: 'white'
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Vote Distribution Chart (Doughnut)
+  const distributionCtx = document.getElementById('voteDistributionChart');
+  if (distributionCtx) {
+    const candidateNames = AppState.candidates.map(c => c.name);
+    const candidateVotes = AppState.candidates.map(c => c.votes);
+    const backgroundColors = [
+      'rgba(79, 70, 229, 0.8)', // Primary color
+      'rgba(34, 197, 94, 0.8)', // Success color
+      'rgba(234, 88, 12, 0.8)', // Orange
+      'rgba(168, 85, 247, 0.8)' // Purple
+    ];
+    const borderColors = [
+      'rgba(79, 70, 229, 1)',
+      'rgba(34, 197, 94, 1)',
+      'rgba(234, 88, 12, 1)',
+      'rgba(168, 85, 247, 1)'
+    ];
+
+    voteDistributionChartInstance = new Chart(distributionCtx, {
+      type: 'doughnut',
+      data: {
+        labels: candidateNames,
+        datasets: [{
+          label: 'Votes',
+          data: candidateVotes,
+          backgroundColor: backgroundColors,
+          borderColor: borderColors,
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'right', // Place legend to the right
+            labels: {
+              color: 'white', // White legend text
+              font: {
+                size: 14
+              }
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const label = context.label || '';
+                const value = context.raw;
+                const total = context.dataset.data.reduce((acc, current) => acc + current, 0);
+                const percentage = ((value / total) * 100).toFixed(1);
+                return `${label}: ${value} (${percentage}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+}
+
+function refreshChart() {
+  // Simulate fetching new data or re-rendering
+  console.log("Refreshing charts...");
+  // For demo, we'll just re-initialize with current data
+  initializeCharts();
+  showSuccessMessage("Charts updated with latest data!");
+}
+
+// Populate statistics cards
+function updateStats() {
+    const totalVotes = AppState.candidates.reduce((sum, candidate) => sum + candidate.votes, 0);
+    document.getElementById('totalVotes').textContent = totalVotes.toLocaleString();
+    
+    // Placeholder for voter turnout and suggestions, as they are hardcoded currently
+    // If you had total eligible voters, you could calculate turnout dynamically
+    // If you had a suggestion data array, you could get its length dynamically
+    document.getElementById('totalSuggestions').textContent = AppState.suggestions.length;
+
+    // Election end date and time remaining (example: 15th December 2024)
+    const electionEndDate = new Date('2025-06-15T23:59:59');
+    const now = new Date();
+    const diffTime = electionEndDate - now;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays > 0) {
+        document.getElementById('timeRemaining').textContent = `${diffDays} days`;
+        document.getElementById('timeRemaining').classList.remove('text-red-600');
+        document.getElementById('timeRemaining').classList.add('text-orange-600');
+    } else {
+        document.getElementById('timeRemaining').textContent = `Ended`;
+        document.getElementById('timeRemaining').classList.remove('text-orange-600');
+        document.getElementById('timeRemaining').classList.add('text-red-600');
+        document.getElementById('electionEndDate').textContent = 'Election has ended';
+    }
+    document.getElementById('electionEndDate').textContent = electionEndDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+
+// Populate Recent Activity
+function renderRecentActivity() {
+  const recentActivityContainer = document.getElementById('recentActivity');
+  recentActivityContainer.innerHTML = ''; // Clear previous entries
+
+  const activityData = [
+    { type: 'vote', user: 'Anonymous Voter', time: '5 mins ago', details: 'A vote was cast' },
+    { type: 'suggestion', user: 'FairVote User', time: '2 hours ago', details: 'New suggestion "Improve Ballot Clarity" submitted' },
+    { type: 'vote', user: 'Guest User', time: 'Yesterday', details: 'A vote was cast' },
+    { type: 'update', user: 'Admin', time: '3 days ago', details: 'Election details updated' },
+    { type: 'suggestion', user: 'Sarah K.', time: '1 week ago', details: 'Suggestion "Online Voter Registration" submitted' }
+  ];
+
+  if (activityData.length === 0) {
+    recentActivityContainer.innerHTML = '<p class="text-[var(--text-muted)] text-center py-4">No recent activity.</p>';
+    return;
+  }
+
+  activityData.forEach(activity => {
+    let iconClass = '';
+    let textColorClass = '';
+    switch (activity.type) {
+      case 'vote':
+        iconClass = 'fas fa-check-circle';
+        textColorClass = 'text-green-500';
+        break;
+      case 'suggestion':
+        iconClass = 'fas fa-lightbulb';
+        textColorClass = 'text-blue-500';
+        break;
+      case 'update':
+        iconClass = 'fas fa-info-circle';
+        textColorClass = 'text-purple-500';
+        break;
+      default:
+        iconClass = 'fas fa-question-circle';
+        textColorClass = 'text-gray-500';
+    }
+
+    const activityItem = `
+      <div class="flex items-start space-x-3 p-3 bg-[var(--bg-secondary)] rounded-lg border border-[var(--border-color)]">
+        <i class="${iconClass} ${textColorClass} text-lg mt-1"></i>
+        <div>
+          <p class="text-sm font-medium text-[var(--text-primary)]">${activity.details}</p>
+          <p class="text-xs text-[var(--text-muted)] mt-1">
+            ${activity.user} &bull; ${activity.time}
+          </p>
+        </div>
+      </div>
+    `;
+    recentActivityContainer.innerHTML += activityItem;
+  });
+}
+
+// Candidates Tab functionality
+function renderCandidates() {
+  const candidatesGrid = document.getElementById('candidatesGrid');
+  candidatesGrid.innerHTML = ''; // Clear existing candidates
+
+  if (AppState.candidates.length === 0) {
+    candidatesGrid.innerHTML = '<p class="text-[var(--text-muted)] text-center col-span-full py-8">No candidates registered for this election yet.</p>';
+    return;
+  }
+
+  AppState.candidates.forEach(candidate => {
+    const candidateCard = `
+      <div class="candidate-card bg-white rounded-xl border border-[var(--border-color)] p-6 shadow-sm flex flex-col items-center text-center">
+        <img src="${candidate.image}" alt="${candidate.name}" class="w-24 h-24 rounded-full object-cover mb-4 border-2 border-[var(--primary-light)]">
+        <h3 class="text-xl font-bold text-[var(--text-primary)] mb-1">${candidate.name}</h3>
+        <p class="text-sm text-[var(--primary-color)] font-medium mb-2">${candidate.party}</p>
+        <p class="text-sm text-[var(--text-secondary)] mb-4 flex-grow">${candidate.description}</p>
+        <div class="flex items-center text-sm text-[var(--text-muted)] mb-4">
+          <i class="fas fa-chart-bar mr-2"></i>
+          <span>${candidate.votes.toLocaleString()} Votes</span>
+        </div>
+        <a href="${candidate.detailsUrl}" class="inline-flex items-center justify-center bg-white border border-[var(--border-color)] text-[var(--text-primary)] text-sm font-semibold rounded-lg px-4 py-2 hover:bg-gray-50 transition-colors w-full">
+          View Profile <i class="fas fa-arrow-right ml-2 text-xs"></i>
+        </a>
+      </div>
+    `;
+    candidatesGrid.innerHTML += candidateCard;
+  });
+}
+
+// Suggestions Tab functionality
+function populateCandidateSelect() {
+  const candidateSelect = document.getElementById('candidate');
+  candidateSelect.innerHTML = '<option value="">Select a candidate</option>'; // Default option
+
+  AppState.candidates.forEach(candidate => {
+    const option = document.createElement('option');
+    option.value = candidate.id;
+    option.textContent = `${candidate.name} - ${candidate.party}`;
+    candidateSelect.appendChild(option);
+  });
+}
+
+function setupSuggestionForm() {
+  const form = document.getElementById('suggestionForm');
+  const titleInput = document.getElementById('title');
+  const titleError = document.getElementById('titleError');
+  const messageTextarea = document.getElementById('message');
+  const messageError = document.getElementById('messageError');
+  const charCount = document.getElementById('charCount');
+  const submitBtn = document.getElementById('submitBtn');
+
+  // Input validation on blur
+  titleInput.addEventListener('input', () => {
+    validateInput(titleInput, titleError, 'title');
+  });
+
+  messageTextarea.addEventListener('input', () => {
+    validateInput(messageTextarea, messageError, 'message');
+    charCount.textContent = messageTextarea.value.length;
+  });
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+
+    const isTitleValid = validateInput(titleInput, titleError, 'title');
+    const isMessageValid = validateInput(messageTextarea, messageError, 'message');
+
+    if (!isTitleValid || !isMessageValid) {
+      showSuccessMessage("Please correct the form errors.");
+      return; // Stop form submission if validation fails
+    }
+
+    const formData = new FormData(form);
+    const suggestion = {
+      title: formData.get('title'),
+      category: formData.get('category') || 'general',
+      relatedCandidate: formData.get('candidate') || 'N/A',
+      message: formData.get('message'),
+      anonymous: formData.get('anonymous') === 'on',
+      timestamp: new Date().toLocaleString()
+    };
+
+    AppState.suggestions.push(suggestion); // Add to our in-memory state
+    console.log("Suggestion submitted:", suggestion);
+    showSuccessMessage("Your suggestion has been submitted successfully!");
+    form.reset(); // Clear the form
+    charCount.textContent = '0'; // Reset character count
+    // Reset borders after successful submission
+    titleInput.classList.remove('border-green-500', 'border-red-500');
+    messageTextarea.classList.remove('border-green-500', 'border-red-500');
+    updateStats(); // Update suggestions count in stats
+  });
+}
+
+// Initial setup on DOMContentLoaded
+document.addEventListener('DOMContentLoaded', () => {
+  initializeUser();
+  initializeTabs();
+  updateStats();
+  renderRecentActivity();
+  setupSuggestionForm();
+  // Ensure charts are initialized when overview tab is loaded initially
+  initializeCharts();
+});
+</script>
+</body>
+</html>

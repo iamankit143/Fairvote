@@ -1,0 +1,704 @@
+<html lang="en">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <title>
+   FairVote - Cast Your Vote
+  </title>
+  <script src="https://cdn.tailwindcss.com">
+  </script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;display=swap" rel="stylesheet"/>
+  <style>
+   body {
+      font-family: 'Inter', sans-serif;
+    }
+  </style>
+ </head>
+ <body class="bg-[#f9f9ff] text-[#1f2937]">
+  <header class="border-b border-[#eae9f7]">
+   <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+    <div class="flex items-center space-x-2">
+     <i class="fas fa-check text-[#8b8de0] text-lg">
+     </i>
+     <span class="font-semibold text-[#111827] text-base select-none">
+      FairVote
+     </span>
+    </div>
+    <ul class="hidden md:flex space-x-8 text-sm text-[#374151] font-normal">
+     <li>
+      <a class="hover:underline" href="./index.html">
+       Home
+      </a>
+     </li>
+     <li>
+      <a class="hover:underline" href="./dashboard.html">
+       Dashboard
+      </a>
+     </li>
+     <li>
+      <a class="hover:underline" href="./candidate.html">
+       Candidates
+      </a>
+     </li>
+     <li>
+      <a class="hover:underline" href="./vote.html">
+       Vote
+      </a>
+     </li>
+    </ul>
+    <div class="hidden md:flex items-center space-x-3">
+     <div class="flex items-center space-x-2 text-[#374151] text-sm font-normal select-none">
+      <div class="w-7 h-7 rounded-full bg-[#d6d4f7] flex items-center justify-center text-[#8b8de0] text-base">
+       <i class="fas fa-user">
+       </i>
+      </div>
+      <span id="headerUsername">
+       Guest
+      </span>
+     </div>
+     <button class="flex items-center space-x-2 border border-[#eae9f7] rounded-md px-3 py-1 text-sm text-[#374151] hover:bg-[#f3f3f9] transition" type="button" id="logoutBtn">
+      <i class="fas fa-sign-out-alt">
+      </i>
+      <span>
+       <a href="./index.html">Log Out</a>
+      </span>
+     </button>
+    </div>
+   </nav>
+  </header>
+
+  <!-- Admin Panel (only visible for testing) -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+      <h3 class="text-sm font-semibold text-yellow-800 mb-2">Admin Panel (Testing Only)</h3>
+      <div class="flex space-x-2">
+        <button id="resetVoteBtn" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1 rounded">
+          Reset My Vote
+        </button>
+        <button id="newElectionBtn" class="bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-1 rounded">
+          Start New Election
+        </button>
+        <button id="viewStatsBtn" class="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-1 rounded">
+          View Vote Status
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 mb-12">
+   <div class="flex justify-between items-center mb-6">
+     <div>
+       <h1 class="text-xl font-extrabold text-[#111827] mb-1 select-none">
+        Cast Your Vote
+       </h1>
+       <p class="text-sm text-[#4b5563] select-none">
+        Vote for your preferred candidate in the current election
+       </p>
+     </div>
+     <div class="text-right">
+       <p class="text-xs text-[#6b7280]">Election ID: <span id="electionId" class="font-mono">2025-001</span></p>
+       <p class="text-xs text-[#6b7280]" id="voteStatus">Ready to vote</p>
+     </div>
+   </div>
+
+   <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Candidate 1 -->
+    <article class="bg-white rounded-lg border border-[#eae9f7] p-5 flex flex-col justify-between">
+     <div>
+      <div class="flex justify-between items-start mb-3">
+       <span class="text-[10px] font-semibold text-[#374151] bg-white border border-[#eae9f7] rounded-full px-2 py-[2px] select-none">
+        Mayor
+       </span>
+       <span class="text-[10px] font-semibold text-[#8b8de0] bg-[#d6d4f7] rounded-full px-2 py-[2px] select-none">
+        Progressive Party
+       </span>
+      </div>
+      <div class="flex items-center space-x-3 mb-1">
+       <img alt="Portrait of Jane Smith, a woman with medium-length brown hair wearing a gray sweater, smiling" class="w-10 h-10 rounded-full object-cover" height="40" src="https://storage.googleapis.com/a1aa/image/938a05ca-f79e-4f85-22cc-62b0e0478b76.jpg" width="40"/>
+       <div>
+        <h2 class="text-sm font-semibold text-[#111827] select-text">
+         Jane Smith
+        </h2>
+        <p class="text-xs text-[#4b5563] select-text" data-candidate-votes="Jane Smith">
+         Current votes: 245
+        </p>
+       </div>
+      </div>
+      <p class="text-xs text-[#374151] mb-2 select-text">
+       Jane Smith is an experienced public servant with 10 years of experience in local government.
+      </p>
+      <p class="text-[10px] text-[#6b7280] flex items-center space-x-1 select-text">
+       <i class="fas fa-info-circle text-[10px]">
+       </i>
+       <span>
+        2 past elections, 1 won
+       </span>
+      </p>
+     </div>
+     <button class="mt-4 bg-[#8b8de0] hover:bg-[#7a7ed1] text-[13px] font-semibold text-black rounded-md py-2 w-full transition select-none vote-btn" data-candidate="Jane Smith" type="button">
+      Vote for this candidate
+     </button>
+    </article>
+
+    <!-- Candidate 2 -->
+    <article class="bg-white rounded-lg border border-[#eae9f7] p-5 flex flex-col justify-between">
+     <div>
+      <div class="flex justify-between items-start mb-3">
+       <span class="text-[10px] font-semibold text-[#374151] bg-white border border-[#eae9f7] rounded-full px-2 py-[2px] select-none">
+        Mayor
+       </span>
+       <span class="text-[10px] font-semibold text-[#8b8de0] bg-[#d6d4f7] rounded-full px-2 py-[2px] select-none">
+        Liberty Union
+       </span>
+      </div>
+      <div class="flex items-center space-x-3 mb-1">
+       <img alt="Portrait of Marcus Johnson, a man with short dark hair and beard wearing a light shirt, smiling" class="w-10 h-10 rounded-full object-cover" height="40" src="https://storage.googleapis.com/a1aa/image/85f259b7-5565-433f-87a3-b7f94874e13a.jpg" width="40"/>
+       <div>
+        <h2 class="text-sm font-semibold text-[#111827] select-text">
+         Marcus Johnson
+        </h2>
+        <p class="text-xs text-[#4b5563] select-text" data-candidate-votes="Marcus Johnson">
+         Current votes: 180
+        </p>
+       </div>
+      </div>
+      <p class="text-xs text-[#374151] mb-2 select-text">
+       Marcus Johnson is a business leader committed to economic growth and community development.
+      </p>
+      <p class="text-[10px] text-[#6b7280] flex items-center space-x-1 select-text">
+       <i class="fas fa-info-circle text-[10px]">
+       </i>
+       <span>
+        2 past elections, 0 won
+       </span>
+      </p>
+     </div>
+     <button class="mt-4 bg-[#8b8de0] hover:bg-[#7a7ed1] text-[13px] font-semibold text-black rounded-md py-2 w-full transition select-none vote-btn" data-candidate="Marcus Johnson" type="button">
+      Vote for this candidate
+     </button>
+    </article>
+
+    <!-- Candidate 3 -->
+    <article class="bg-white rounded-lg border border-[#eae9f7] p-5 flex flex-col justify-between">
+     <div>
+      <div class="flex justify-between items-start mb-3">
+       <span class="text-[10px] font-semibold text-[#374151] bg-white border border-[#eae9f7] rounded-full px-2 py-[2px] select-none">
+        Mayor
+       </span>
+       <span class="text-[10px] font-semibold text-[#8b8de0] bg-[#d6d4f7] rounded-full px-2 py-[2px] select-none">
+        Citizens Alliance
+       </span>
+      </div>
+      <div class="flex items-center space-x-3 mb-1">
+       <img alt="Portrait of Elena Rodriguez, a woman with long dark hair wearing a black top, smiling" class="w-10 h-10 rounded-full object-cover" height="40" src="https://storage.googleapis.com/a1aa/image/eed4725b-1881-43db-b22a-eb87508446e1.jpg" width="40"/>
+       <div>
+        <h2 class="text-sm font-semibold text-[#111827] select-text">
+         Elena Rodriguez
+        </h2>
+        <p class="text-xs text-[#4b5563] select-text" data-candidate-votes="Elena Rodriguez">
+         Current votes: 310
+        </p>
+       </div>
+      </div>
+      <p class="text-xs text-[#374151] mb-2 select-text">
+       Elena Rodriguez is a community organizer focused on social justice and inclusive policies.
+      </p>
+      <p class="text-[10px] text-[#6b7280] flex items-center space-x-1 select-text">
+       <i class="fas fa-info-circle text-[10px]">
+       </i>
+       <span>
+        2 past elections, 2 won
+       </span>
+      </p>
+     </div>
+     <button class="mt-4 bg-[#8b8de0] hover:bg-[#7a7ed1] text-[13px] font-semibold text-black rounded-md py-2 w-full transition select-none vote-btn" data-candidate="Elena Rodriguez" type="button">
+      Vote for this candidate
+     </button>
+    </article>
+
+    <!-- Candidate 4 -->
+    <article class="bg-white rounded-lg border border-[#eae9f7] p-5 flex flex-col justify-between">
+     <div>
+      <div class="flex justify-between items-start mb-3">
+       <span class="text-[10px] font-semibold text-[#374151] bg-white border border-[#eae9f7] rounded-full px-2 py-[2px] select-none">
+        Mayor
+       </span>
+       <span class="text-[10px] font-semibold text-[#8b8de0] bg-[#d6d4f7] rounded-full px-2 py-[2px] select-none">
+        Reform Coalition
+       </span>
+      </div>
+      <div class="flex items-center space-x-3 mb-1">
+       <img alt="Portrait of David Chen, a man with short hair and glasses wearing a green shirt, smiling" class="w-10 h-10 rounded-full object-cover" height="40" src="https://storage.googleapis.com/a1aa/image/58f69b1c-91f5-439a-7109-d74f3c3e59b5.jpg" width="40"/>
+       <div>
+        <h2 class="text-sm font-semibold text-[#111827] select-text">
+         David Chen
+        </h2>
+        <p class="text-xs text-[#4b5563] select-text" data-candidate-votes="David Chen">
+         Current votes: 275
+        </p>
+       </div>
+      </div>
+      <p class="text-xs text-[#374151] mb-2 select-text">
+       David Chen is a former educator advocating for transparency and educational improvements.
+      </p>
+      <p class="text-[10px] text-[#6b7280] flex items-center space-x-1 select-text">
+       <i class="fas fa-info-circle text-[10px]">
+       </i>
+       <span>
+        2 past elections, 1 won
+       </span>
+      </p>
+     </div>
+     <button class="mt-4 bg-[#8b8de0] hover:bg-[#7a7ed1] text-[13px] font-semibold text-black rounded-md py-2 w-full transition select-none vote-btn" data-candidate="David Chen" type="button">
+      Vote for this candidate
+     </button>
+    </article>
+   </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-[#e6e6f0] mt-12">
+    <div class="max-w-7xl mx-auto px-6 py-10 flex flex-col md:flex-row md:justify-between gap-10 md:gap-0">
+      <div class="flex flex-col gap-3 max-w-xs">
+        <div class="flex items-center gap-2 text-[#3f3d56] font-semibold text-base">
+          <i class="fas fa-check text-[#8a7de0]"></i>
+          <span>FairVote</span>
+        </div>
+        <p class="text-sm text-[#4b4b6a] leading-relaxed">
+          Making democracy more accessible and<br />
+          transparent through innovative voting solutions.
+        </p>
+      </div>
+      <div class="flex flex-col gap-3 text-[#6b6b7d] text-sm font-semibold uppercase">
+        <span>Links</span>
+        <a href="./index.html" class="font-normal text-[#4b4b6a] hover:underline">Home</a>
+        <a href="./candidate.html" class="font-normal text-[#4b4b6a] hover:underline">Candidates</a>
+        <a href="./vote.html" class="font-normal text-[#4b4b6a] hover:underline">Vote Now</a>
+      </div>
+      <div class="flex flex-col gap-3 text-[#6b6b7d] text-sm font-semibold uppercase">
+        <span>Legal</span>
+        <a href="#" class="font-normal text-[#4b4b6a] hover:underline">Privacy Policy</a>
+        <a href="#" class="font-normal text-[#4b4b6a] hover:underline">Terms of Service</a>
+        <a href="#" class="font-normal text-[#4b4b6a] hover:underline">Contact Us</a>
+      </div>
+    </div>
+    <div class="max-w-7xl mx-auto px-6 pb-6 text-center text-[#6b6b7d] text-xs select-none">
+      © 2025 FairVote. All rights reserved.
+    </div>
+  </footer>
+  
+  <script>
+    // Voting System Management
+      class VotingSystem {
+        constructor() {
+          this.currentElectionId = this.getCurrentElectionId();
+          this.initializeCandidates();
+        }
+
+        getCurrentElectionId() {
+          // Get current election ID or create a new one
+          let electionId = '';
+          if (typeof Storage !== "undefined") {
+            electionId = JSON.parse(window.localStorage.getItem('fairVoteCurrentElectionId') || 'null') || this.generateElectionId();
+            window.localStorage.setItem('fairVoteCurrentElectionId', JSON.stringify(electionId));
+          } else {
+            electionId = this.generateElectionId();
+          }
+          return electionId;
+        }
+
+        generateElectionId() {
+          const date = new Date();
+          const year = date.getFullYear();
+          const month = (date.getMonth() + 1).toString().padStart(2, '0');
+          const day = date.getDate().toString().padStart(2, '0');
+          const time = date.getTime().toString().slice(-3);
+          return `${year}-${month}${day}-${time}`;
+        }
+
+        initializeCandidates() {
+          this.candidates = {
+            'Jane Smith': {
+              votes: 245,
+              party: 'Progressive Party'
+            },
+            'Marcus Johnson': {
+              votes: 180,
+              party: 'Liberty Union'
+            },
+            'Elena Rodriguez': {
+              votes: 310,
+              party: 'Citizens Alliance'
+            },
+            'David Chen': {
+              votes: 275,
+              party: 'Reform Coalition'
+            }
+          };
+
+          // Load saved votes from localStorage for the current election
+          if (typeof Storage !== "undefined") {
+            const savedVotes = JSON.parse(window.localStorage.getItem(`fairVoteResults_${this.currentElectionId}`) || 'null');
+            if (savedVotes) {
+              Object.keys(this.candidates).forEach(candidate => {
+                if (savedVotes[candidate] !== undefined) {
+                  this.candidates[candidate].votes = savedVotes[candidate];
+                }
+              });
+            }
+          }
+        }
+
+        hasUserVoted(username) {
+          if (typeof Storage === "undefined") return false;
+          const voteKey = `fairVoteRecord_${this.currentElectionId}_${username}`;
+          return window.localStorage.getItem(voteKey) !== null;
+        }
+
+        getUserVote(username) {
+          if (typeof Storage === "undefined") return null;
+          const voteKey = `fairVoteRecord_${this.currentElectionId}_${username}`;
+          return JSON.parse(window.localStorage.getItem(voteKey) || 'null');
+        }
+
+        castVote(username, candidateName) {
+          if (this.hasUserVoted(username)) {
+            throw new Error('User has already voted in this election');
+          }
+
+          // Record the vote
+          this.candidates[candidateName].votes++;
+
+          // Save to localStorage
+          if (typeof Storage !== "undefined") {
+            const voteKey = `fairVoteRecord_${this.currentElectionId}_${username}`;
+            const voteData = {
+              candidate: candidateName,
+              timestamp: new Date().toISOString(),
+              electionId: this.currentElectionId
+            };
+            window.localStorage.setItem(voteKey, JSON.stringify(voteData));
+
+            // Save vote counts
+            const voteResults = {};
+            Object.keys(this.candidates).forEach(candidate => {
+              voteResults[candidate] = this.candidates[candidate].votes;
+            });
+            window.localStorage.setItem(`fairVoteResults_${this.currentElectionId}`, JSON.stringify(voteResults));
+          }
+
+          this.updateVoteDisplay();
+          return true;
+        }
+
+        resetUserVote(username) {
+          if (typeof Storage === "undefined") return false;
+
+          const userVote = this.getUserVote(username);
+          if (userVote) {
+            // Only reset if the vote was for the current election
+            if (userVote.electionId === this.currentElectionId) {
+              // Subtract the vote
+              this.candidates[userVote.candidate].votes--;
+
+              // Remove vote record
+              const voteKey = `fairVoteRecord_${this.currentElectionId}_${username}`;
+              window.localStorage.removeItem(voteKey);
+
+              // Update vote counts in storage
+              const voteResults = {};
+              Object.keys(this.candidates).forEach(candidate => {
+                voteResults[candidate] = this.candidates[candidate].votes;
+              });
+              window.localStorage.setItem(`fairVoteResults_${this.currentElectionId}`, JSON.stringify(voteResults));
+
+              this.updateVoteDisplay();
+              return true;
+            } else {
+              // If the vote was from a previous election, just remove the record
+              // without affecting current election vote counts.
+              const voteKey = `fairVoteRecord_${userVote.electionId}_${username}`;
+              window.localStorage.removeItem(voteKey);
+              this.updateVoteDisplay(); // Update display in case it impacts current view
+              return true;
+            }
+          }
+          return false;
+        }
+
+        startNewElection() {
+          // Generate new election ID
+          this.currentElectionId = this.generateElectionId();
+
+          if (typeof Storage !== "undefined") {
+            window.localStorage.setItem('fairVoteCurrentElectionId', JSON.stringify(this.currentElectionId));
+          }
+
+          // Reset candidate votes to initial values for the new election
+          this.candidates = {
+            'Jane Smith': {
+              votes: 245,
+              party: 'Progressive Party'
+            },
+            'Marcus Johnson': {
+              votes: 180,
+              party: 'Liberty Union'
+            },
+            'Elena Rodriguez': {
+              votes: 310,
+              party: 'Citizens Alliance'
+            },
+            'David Chen': {
+              votes: 275,
+              party: 'Reform Coalition'
+            }
+          };
+
+          // Clear previous election's results from localStorage for this specific election ID
+          if (typeof Storage !== "undefined") {
+            Object.keys(localStorage).forEach(key => {
+              if (key.startsWith('fairVoteResults_') && !key.includes(this.currentElectionId)) {
+                localStorage.removeItem(key);
+              }
+              if (key.startsWith('fairVoteRecord_')) {
+                localStorage.removeItem(key); // Clear all user vote records for any election
+              }
+            });
+          }
+
+          this.updateVoteDisplay();
+          this.updateElectionDisplay();
+          return this.currentElectionId;
+        }
+
+
+        updateVoteDisplay() {
+          Object.keys(this.candidates).forEach(candidateName => {
+            const voteElement = document.querySelector(`[data-candidate-votes="${candidateName}"]`);
+            if (voteElement) {
+              voteElement.textContent = `Current votes: ${this.candidates[candidateName].votes}`;
+            }
+          });
+        }
+
+        updateElectionDisplay() {
+          const electionIdElement = document.getElementById('electionId');
+          if (electionIdElement) {
+            electionIdElement.textContent = this.currentElectionId;
+          }
+        }
+
+        updateVoteStatus(username) {
+          const statusElement = document.getElementById('voteStatus');
+          if (!statusElement) return;
+
+          if (this.hasUserVoted(username)) {
+            const userVote = this.getUserVote(username);
+            statusElement.textContent = `Voted for: ${userVote.candidate}`;
+            statusElement.className = 'text-xs text-green-600 font-semibold';
+          } else {
+            statusElement.textContent = 'Ready to vote';
+            statusElement.className = 'text-xs text-[#6b7280]';
+          }
+        }
+      }
+
+      // Initialize voting system
+      let votingSystem;
+
+      document.addEventListener('DOMContentLoaded', function () {
+        votingSystem = new VotingSystem();
+
+        // Check if username exists in localStorage
+        const storedUsername = (typeof Storage !== "undefined") ?
+          window.localStorage.getItem('fairVoteUsername') : null;
+
+        console.log('Checking for username:', storedUsername);
+
+        if (storedUsername) {
+          // Update user display in header
+          const userDisplay = document.getElementById('headerUsername');
+          if (userDisplay) {
+            console.log('Updating header with username');
+            userDisplay.textContent = storedUsername;
+          }
+
+          // Update vote status
+          votingSystem.updateVoteStatus(storedUsername);
+        } else {
+          console.log('No username found');
+          const userDisplay = document.getElementById('headerUsername');
+          if (userDisplay) {
+            userDisplay.textContent = 'Guest';
+          }
+        }
+
+        // Update displays
+        votingSystem.updateVoteDisplay();
+        votingSystem.updateElectionDisplay();
+
+        // Handle logout functionality
+        const logoutButton = document.getElementById('logoutBtn');
+        if (logoutButton) {
+          logoutButton.addEventListener('click', function () {
+            if (typeof Storage !== "undefined") {
+              window.localStorage.removeItem('fairVoteUsername');
+              window.localStorage.removeItem('fairVoteEmail');
+            }
+
+            alert('You have been logged out successfully!');
+            window.location.href = 'index.html';
+          });
+        }
+
+        // Handle voting functionality
+        const voteButtons = document.querySelectorAll('.vote-btn');
+        voteButtons.forEach(button => {
+          button.addEventListener('click', function () {
+            const candidateName = this.getAttribute('data-candidate');
+            const username = (typeof Storage !== "undefined") ?
+              window.localStorage.getItem('fairVoteUsername') : null;
+
+            if (!username) {
+              alert('Please log in to vote!');
+              window.location.href = 'index.html';
+              return;
+            }
+
+            // Check if user has already voted in this election
+            if (votingSystem.hasUserVoted(username)) {
+              const userVote = votingSystem.getUserVote(username);
+              alert(`You have already voted for ${userVote.candidate} in this election (ID: ${votingSystem.currentElectionId})`);
+              return;
+            }
+
+            // Confirm vote
+            const confirmVote = confirm(`Are you sure you want to vote for ${candidateName}?`);
+            if (confirmVote) {
+              try {
+                votingSystem.castVote(username, candidateName);
+                alert(`Thank you ${username}! Your vote for ${candidateName} has been recorded successfully.`);
+
+                // Update button states
+                updateButtonStates(username);
+
+                // Update vote status
+                votingSystem.updateVoteStatus(username);
+              } catch (error) {
+                alert('Error casting vote: ' + error.message);
+              }
+            }
+          });
+        });
+
+        // Admin panel functionality
+        const resetVoteBtn = document.getElementById('resetVoteBtn');
+        if (resetVoteBtn) {
+          resetVoteBtn.addEventListener('click', function () {
+            const username = (typeof Storage !== "undefined") ?
+              window.localStorage.getItem('fairVoteUsername') : null;
+
+            if (!username) {
+              alert('Please log in first!');
+              return;
+            }
+
+            if (confirm('Are you sure you want to reset your vote? This action cannot be undone.')) {
+              if (votingSystem.resetUserVote(username)) {
+                alert('Your vote has been reset successfully!');
+                updateButtonStates(username);
+                votingSystem.updateVoteStatus(username);
+              } else {
+                alert('No vote found to reset for the current election or previous election.');
+              }
+            }
+          });
+        }
+
+        const newElectionBtn = document.getElementById('newElectionBtn');
+        if (newElectionBtn) {
+          newElectionBtn.addEventListener('click', function () {
+            if (confirm('Start a new election? This will reset all votes and create a new election ID.')) {
+              const newElectionId = votingSystem.startNewElection();
+              alert(`New election started! Election ID: ${newElectionId}`);
+
+              const username = (typeof Storage !== "undefined") ?
+                window.localStorage.getItem('fairVoteUsername') : null;
+              if (username) {
+                updateButtonStates(username);
+                votingSystem.updateVoteStatus(username);
+              } else {
+                // If no user logged in, still update button states to 'Vote for this candidate'
+                updateButtonStates(null);
+              }
+            }
+          });
+        }
+
+        const viewStatsBtn = document.getElementById('viewStatsBtn');
+        if (viewStatsBtn) {
+          viewStatsBtn.addEventListener('click', function () {
+            const username = (typeof Storage !== "undefined") ?
+              window.localStorage.getItem('fairVoteUsername') : null;
+
+            let statusMessage = `Election ID: ${votingSystem.currentElectionId}\n\n`;
+            statusMessage += 'Current Vote Counts:\n';
+
+            Object.keys(votingSystem.candidates).forEach(candidate => {
+              statusMessage += `${candidate}: ${votingSystem.candidates[candidate].votes} votes\n`;
+            });
+
+            if (username) {
+              if (votingSystem.hasUserVoted(username)) {
+                const userVote = votingSystem.getUserVote(username);
+                statusMessage += `\nYour vote: ${userVote.candidate}`;
+                statusMessage += `\nVoted on: ${new Date(userVote.timestamp).toLocaleString()}`;
+              } else {
+                statusMessage += '\nYou have not voted yet.';
+              }
+            }
+
+            alert(statusMessage);
+          });
+        }
+
+        // Initial button state update
+        const username = (typeof Storage !== "undefined") ?
+          window.localStorage.getItem('fairVoteUsername') : null;
+        updateButtonStates(username); // Call with username (or null if not logged in)
+      });
+
+      function updateButtonStates(username) {
+        const voteButtons = document.querySelectorAll('.vote-btn');
+        const hasVoted = votingSystem.hasUserVoted(username);
+        const userVote = username ? votingSystem.getUserVote(username) : null; // Get user's specific vote if logged in
+
+        voteButtons.forEach(btn => {
+          const candidateName = btn.getAttribute('data-candidate');
+          btn.classList.remove('bg-gray-400', 'cursor-not-allowed', 'bg-green-500', 'text-white');
+          btn.classList.add('bg-[#8b8de0]', 'hover:bg-[#7a7ed1]', 'text-black'); // Reset to default style
+
+          if (username && hasVoted) {
+            if (userVote && candidateName === userVote.candidate) {
+              btn.textContent = 'Your Vote';
+              btn.disabled = true;
+              btn.classList.remove('hover:bg-[#7a7ed1]', 'bg-[#8b8de0]');
+              btn.classList.add('bg-green-500', 'cursor-not-allowed', 'text-white');
+            } else {
+              btn.textContent = 'Already Voted';
+              btn.disabled = true;
+              btn.classList.remove('hover:bg-[#7a7ed1]', 'bg-[#8b8de0]');
+              btn.classList.add('bg-gray-400', 'cursor-not-allowed');
+            }
+          } else {
+            btn.textContent = 'Vote for this candidate';
+            btn.disabled = false;
+            // Ensure hover state is active if enabled
+            btn.classList.add('hover:bg-[#7a7ed1]');
+          }
+        });
+      }
+  </script>
+ </body>
+</html>
