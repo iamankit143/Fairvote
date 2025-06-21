@@ -63,7 +63,7 @@ FairVote is a modern, secure, and user-friendly online voting system designed to
 ### Run Locally
 
 ```bash
-git clone https://github.com/yourusername/fairvote.git
+git clone https://github.com/iamankit143/Fairvote.git
 cd fairvote
 
 
